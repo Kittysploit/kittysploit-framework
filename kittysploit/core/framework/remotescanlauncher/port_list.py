@@ -1,0 +1,31 @@
+PORT = {
+    21: "ftp",
+    22: "ssh",
+    23: "telnet",
+    25: "smtp",
+    53: "dns",
+    69: "tftp",
+    80: "http",
+    110: "pop3",
+    143: "imap",
+    161: "snmp",
+    443: "https",
+    465: "smtps",
+    993: "imaps",
+    995: "pop3s",
+    3306: "mysql",
+    3389: "rdp",
+    5060: "sip",
+    5900: "vnc",
+    6667: "irc",
+    10000: "webmin",
+    27017: "mongodb",
+}
+
+PORT_SSL = {
+    "https": "http",
+    "pop3s": "pop3",
+    "ftps": "ftp",
+    "smtps": "smtp",
+    "imaps": "imap",
+}
