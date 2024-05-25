@@ -15,15 +15,13 @@ class Update_framework(object):
 
         try:
             data = requests.get(
-                "https://raw.githubusercontent.com/Kittysploit/Kittysploit/main/base/version.py"
+                "https://raw.githubusercontent.com/Kittysploit/kittysploit-framework/main/base/version.py"
             ).content
             if data:
                 match = re.search(r'__version__ = "(.*?)"', data.decode("utf-8"))
                 if match:
                     remote_version = match.group(1)
-                    if version.parse(remote_version) > version.parse(
-                        self.local_version
-                    ):
+                    if version.parse(remote_version) > version.parse(self.local_version):
                         print_info("New version available: {}".format(remote_version))
                         print_info("Updating framework...")
                         subprocess.call(
