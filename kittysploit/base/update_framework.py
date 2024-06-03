@@ -24,15 +24,26 @@ class Update_framework(object):
                     if version.parse(remote_version) > version.parse(self.local_version):
                         print_info("New version available: {}".format(remote_version))
                         print_info("Updating framework...")
-                        subprocess.call(
-                            [
-                                "pip3",
-                                "install",
-                                "git+https://github.com/Kittysploit/kittysploit-framework/",
-                                "--ignore-installed",
-                            ],
-                            shell=False,
-                        )
+                        try:
+                            # Stash any local changes
+                            subprocess.run(["git", "stash"], check=True, text=True, capture_output=True)
+                            # Pull the latest changes from the remote repository
+                            subprocess.run(["git", "pull"], check=True, text=True, capture_output=True)
+                            # Try to pop the stashed changes
+                            pop_result = subprocess.run(
+                                ["git", "stash", "pop"],
+                                text=True,
+                                capture_output=True
+                            )
+                            if pop_result.returncode != 0:
+                                print_error("Stash pop failed, manual conflict resolution required.")
+                                print_error(pop_result.stderr)
+                            else:
+                                print_info("Update successful: " + pop_result.stdout)
+                        except subprocess.CalledProcessError as e:
+                            print_error(f"Update failed: {e.stderr}")
+                        except Exception as e:
+                            print_error(f"An error occurred: {str(e)}")
                     else:
                         print_info(f"Your version '{self.local_version}' is up to date")
             else:
