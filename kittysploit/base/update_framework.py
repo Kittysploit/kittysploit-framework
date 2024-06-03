@@ -28,7 +28,7 @@ class Update_framework(object):
                             [
                                 "pip3",
                                 "install",
-                                "git+https://github.com/Kittysploit/Kittysploit/kittysploit-framework",
+                                "git+https://github.com/Kittysploit/kittysploit-framework/main/kittysploit",
                                 "--ignore-installed",
                             ],
                             shell=False,
