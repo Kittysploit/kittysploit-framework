@@ -266,7 +266,6 @@ class All_commands(Base_command, Show_command):
     myip                                       Show your IP address
     busy_port                                  Show all ports that are in use
     echo <text>                                Print text
-    listen <port>                              Listen to connections, default:4000
     auto_attack [-h]                           Execute auto attack list when session created
     jobs [-h]                                  Display jobs
     sessions [-h]                              Display sessions
@@ -1256,8 +1255,8 @@ class All_commands(Base_command, Show_command):
     def command_history(self, *args, **kwargs):
         import re
         # read history file
-        if file_exists("kittysploit/log/log_history"):
-            with open("kittysploit/log/log_history", "r") as f:
+        if file_exists("kittysploit/log/history.log"):
+            with open("kittysploit/log/history.log", "r") as f:
                 for line in f:
                     if re.match(r'^\+', line):
                         print_info(line.strip())

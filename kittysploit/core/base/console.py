@@ -97,7 +97,7 @@ class Console(BaseCompleter):
         display_message("console").start()
         self.my_config = KittyConfig()
         self.commands = All_commands()
-        self.history = LimitedFileHistory(os.path.join("kittysploit/log/log_history"))
+        self.history = LimitedFileHistory(os.path.join("kittysploit/log/history.log"))
         self.sessions = Sessions()
         self.modules = index_modules()
         self.local_storage = LocalStorage()

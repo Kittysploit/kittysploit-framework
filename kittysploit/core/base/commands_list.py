@@ -16,7 +16,6 @@ GLOBAL_COMMANDS = [
     "reload",
     "tor",
     "myip",
-    "listen",
     "pattern_create",
     "pattern_research",
     "sessions",
