@@ -15,7 +15,7 @@ class Update_framework(object):
 
         try:
             data = requests.get(
-                "https://raw.githubusercontent.com/Kittysploit/kittysploit-framework/main/base/version.py"
+                "https://raw.githubusercontent.com/Kittysploit/kittysploit-framework/main/kittysploit/base/version.py"
             ).content
             if data:
                 match = re.search(r'__version__ = "(.*?)"', data.decode("utf-8"))
@@ -28,7 +28,7 @@ class Update_framework(object):
                             [
                                 "pip3",
                                 "install",
-                                "git+https://github.com/Kittysploit/Kittysploit",
+                                "git+https://github.com/Kittysploit/Kittysploit/kittysploit-framework",
                                 "--ignore-installed",
                             ],
                             shell=False,
