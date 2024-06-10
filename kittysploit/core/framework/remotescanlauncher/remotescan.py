@@ -47,8 +47,8 @@ class RemoteScan:
         elif self.target.startswith("https"):
             self.target = self.target.split("//")[1]
         scan = Scanner(target=self.target, port="20-1024", workspace=self.workspace)
-        port_found = scan.scan()
-        for port in port_found:
+        self.port_scanned = scan.scan()
+        for port in self.port_scanned:
             check = (
                 db.query(Workspace_data)
                 .filter(
@@ -67,17 +67,22 @@ class RemoteScan:
                 db.commit()
 
         #        my_target_port = db.query(Workspace_data.port).filter(Workspace_data.name==self.workspace, Workspace_data.ip==self.target, Workspace_data.target==False).all()
-        #        self.port_scanned = [value for value, in my_target_port]
-        for port in port_found:
+        for port in self.port_scanned:
             try:
-                proto = PORT[int(port)]
-                self.protocols.append(proto)
-                if proto == "http" or proto == "https":
-                    self.cache = requests.get(url=f"{proto}://{self.target}")
-                self.port_temporaire[port] = proto
+                if int(port) in PORT:
+                    
+                    proto = PORT[int(port)]
+                    self.protocols.append(proto)
+                    if proto == "http" or proto == "https":
+                        
+                        self.cache = requests.get(url=f"{proto}://{self.target}")
+                    self.port_temporaire[port] = proto
+                else:
+                    self.port_temporaire[port] = port
             except:
                 continue
-        return port_found
+        print(self.port_temporaire)
+        return self.port_scanned
 
     def personnalize(self) -> None:
         """
@@ -92,9 +97,12 @@ class RemoteScan:
         Get all modules
         :return: number of modules
         """
-        modules_query = (
-            db.query(Modules.path).filter(Modules.type_module == "remotescan").all()
-        )
+        unique_protocols = set(self.port_temporaire.values())
+        modules_query = (db.query(Modules.path, Modules.protocol).filter(Modules.type_module == "remotescan").
+                         filter(Modules.protocol.in_(unique_protocols)).all())
+        print(modules_query)
+
+
         #        for p in self.protocols:
         #            if p in PORT_SSL:
         #                p = PORT_SSL[p]
@@ -104,7 +112,7 @@ class RemoteScan:
         #                self.all_modules.append(value[0].split('/')[1]+"@@"+value[0])
         #            if value[0].split('/')[1] in self.protocols_ssl:
         #                self.all_modules.append(value[0].split('/')[1]+"s@@"+value[0])
-        self.all_modules = [item[0] for item in modules_query]
+        self.all_modules = [item for item in modules_query]
         return len(self.all_modules)
 
     def run_threads(self, threads_number, target_function, *args, **kwargs):
@@ -158,15 +166,17 @@ class RemoteScan:
                 #                for i in self.port_temporaire.keys():
                 #                    if self.port_temporaire[i] == proto_of_module:
                 #                        port = i
-                #                        break
-                module_path = pythonize_path(new_module)
+                #               
+                # break
+                module_path, protocol = new_module
+                
+                module_path = pythonize_path(module_path)
                 module_path = ".".join(("modules", module_path))
+#                port = PORT[protocol]
                 #                if proto_of_module in PORT_SSL:
                 #                    current_module_scan = import_module(module_path)(self.target, port, self.cache, True)
                 #                else:
-                current_module_scan = import_module(module_path)(
-                    self.target, 80, self.cache
-                )
+                current_module_scan = import_module(module_path)(self.target, 80, self.cache)
                 try:
                     r = current_module_scan.run()
                     if r:
@@ -175,14 +185,29 @@ class RemoteScan:
                         if isinstance(r, str):
                             info_return = r
                         info = current_module_scan.__info__
+                        module_cvss3 = ""
+                        module_name = ""
+                        module_cve = ""
+                        module_module = ""
+                        module_protocol = ""
+                        if "cvss3" in info:
+                            module_cvss3 = info["cvss3"]
+                        if "name" in info:
+                            module_name = info["name"]
+                        if "cve" in info:
+                            module_cve = info["cve"]
+                        if "module" in info:
+                            module_module = info["module"]
+                        if "protocol" in info:
+                            module_protocol = info["protocol"]
                         add_info = Remotescan_data(
                             remotescan_id=self.scan_id,
                             target=self.target,
                             port=80,
-                            cvss3=info["status"],
-                            nom=info["description"],
-                            cve=info["cve"],
-                            modules=info["module"],
+                            cvss3=module_cvss3,
+                            name=module_name,
+                            cve=module_cve,
+                            modules=module_module,
                             info=info_return,
                         )
                         db.add(add_info)

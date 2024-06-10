@@ -1,6 +1,7 @@
 from kittysploit.core.framework.base_module import BaseModule
 from kittysploit.core.base.storage import LocalStorage
 from kittysploit.core.base.io import print_success, print_status
+from kittysploit.core.base.jobs import Jobs
 import threading
 
 
@@ -13,9 +14,20 @@ class Listener(BaseModule, threading.Thread):
         self.sock = None
         self.stop_flag = threading.Event()
         self.local_storage = LocalStorage()
+        self.mute = False
 
     def run(self):
         raise NotImplementedError("You have to define your own 'send_protocol' method.")
+
+    def _exploit_background(self):
+        port = ""
+        if "lhost" in self.exploit_attributes:
+            port = self.exploit_attributes["lport"][0]
+        elif "rhost" in self.exploit_attributes:
+            port = self.exploit_attributes["rport"][0]
+        if port:
+            self.mute = True
+            Jobs().create_job("Listener", f":{port}", self._exploit)
 
     def _exploit(self):
         from kittysploit.core.base.sessions import Sessions
@@ -41,7 +53,8 @@ class Listener(BaseModule, threading.Thread):
                     session_listener=info["module"],
                     session_option=self.exploit_attributes,
                 )
-            print_success("Session opened")
+            if not self.mute:
+                print_success("Session opened")
             return True
 
         else:

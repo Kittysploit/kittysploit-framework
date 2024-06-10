@@ -1,6 +1,6 @@
 from kittysploit import *
 
-class Module(Auxiliary):
+class Module(Dev, Auxiliary):
 
     __info__ = {
         "name": "%MODULE_NAME%",

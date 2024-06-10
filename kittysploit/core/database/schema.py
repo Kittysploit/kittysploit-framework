@@ -30,6 +30,7 @@ class Modules(Base):
     plugin = Column(Text)
     platform = Column(Text)
     arch = Column(Text)
+    protocol = Column(Text)
 
     def __init__(
         self,
@@ -43,6 +44,7 @@ class Modules(Base):
         plugin="",
         platform="",
         arch="",
+        protocol = ""
     ):
         self.type_module = type_module
         self.dev_mode = dev_mode
@@ -54,6 +56,7 @@ class Modules(Base):
         self.plugin = plugin
         self.platform = platform
         self.arch = arch
+        self.protocol = protocol
 
 
 class Meta(Base):
@@ -157,9 +160,10 @@ class Remotescan_data(Base):
     target = Column(Text)
     port = Column(Integer)
     cvss3 = Column(Text)
-    nom = Column(Text)
+    name = Column(Text)
     cve = Column(Text)
     modules = Column(Text)
+    protocol = Column(Text)
     info = Column(Text)
 
     def __init__(
@@ -168,18 +172,20 @@ class Remotescan_data(Base):
         target="",
         port=0,
         cvss3="",
-        nom="",
+        name="",
         cve="",
         modules="",
+        protocol="",
         info="",
     ):
         self.remotescan_id = remotescan_id
         self.target = target
         self.port = port
         self.cvss3 = cvss3
-        self.nom = nom
+        self.name = name
         self.cve = cve
         self.modules = modules
+        self.protocol = protocol
         self.info = info
 
 

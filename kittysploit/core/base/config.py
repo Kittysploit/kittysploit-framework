@@ -81,7 +81,6 @@ def create_config_file() -> None:
     config_file_path = os.path.join(base_path(), "config", "config_file.ini")
     config = configparser.ConfigParser()
     config.add_section("FRAMEWORK")
-    config.add_section("UI")
     config.add_section("API")
     config.add_section("TOR")
     config.add_section("WEB")
@@ -90,9 +89,9 @@ def create_config_file() -> None:
     config["FRAMEWORK"]["show_banner"] = "True"
     config["FRAMEWORK"]["load_modules_before_start"] = "True"
     config["FRAMEWORK"]["reset_workspace_before_start"] = "True"
-    config["FRAMEWORK"]["size_file_history"] = "10"
-    config["UI"]["username"] = "kitty"
-    config["UI"]["password"] = "kitty"
+    config["FRAMEWORK"]["size_file_history"] = "200"
+    config["FRAMEWORK"]["size_prompt_history"] = "40"
+    config["FRAMEWORK"]["session_sound"] = "True"
     config["API"]["username"] = "kitty"
     config["API"]["password"] = "kitty"
     config["TOR"]["enable"] = "False"

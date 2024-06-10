@@ -1,5 +1,5 @@
 from kittysploit.core.framework.browser_server.base_browser_server import app, sio
-from kittysploit.core.base.io import print_error, print_info
+from kittysploit.core.base.io import print_error, print_info, print_status
 from kittysploit.core.base.sessions import Sessions
 from kittysploit.core.framework.session_type import SessionType
 from flask import Response, render_template, make_response, request, send_from_directory
@@ -121,9 +121,10 @@ def index():
 def send_static(path):
     return send_from_directory('static', path)
 
-def start_browser_server(port=5555):
+def start_browser_server(host="0.0.0.0", port=5555):
     try:
-        sio.run(app, host="0.0.0.0", port=port, debug=False)
+        sio.run(app, host=host, port=port, debug=False)
+        
     except KeyboardInterrupt:
         sio.stop()
     except OSError as e:

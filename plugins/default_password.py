@@ -5,9 +5,10 @@ from tinydb.middlewares import CachingMiddleware
 import re
 
 class Module(Plugin):
-    """Run all modules default password"""
 
-    __info__ = {"name": "default_password", "description": "default_password"}
+    __info__ = {"name": "default_password", 
+         "description": "default_password"
+         }
 
     def __init__(self):
 
@@ -16,7 +17,8 @@ class Module(Plugin):
         )
 
     def run(self, *args, **kwargs):
-        parser = ModuleArgumentParser(description=self.__doc__, prog="graph")
+        
+        parser = ModuleArgumentParser(description=self.__doc__, prog="default_password")
         parser.add_argument("-s", dest="search", help="search", type=str)
         if args[0] == "":
             parser.print_help()

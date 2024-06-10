@@ -1,7 +1,8 @@
 from kittysploit.core.base.storage import LocalStorage
 from kittysploit.core.framework.shell.javascript import Javascript
 from kittysploit.core.base.io import print_success, print_info
-
+from kittysploit.core.utils.sound import play_and_stop
+from kittysploit.core.base.config import KittyConfig
 
 class Sessions:
 
@@ -34,10 +35,10 @@ class Sessions:
     ):
 
         session_id = 0
-        while session_id in self.local_storage.get("sessions") or session_id < len(
-            self.local_storage.get("sessions")
-        ):
+        while session_id in self.local_storage.get("sessions") or session_id < len(self.local_storage.get("sessions")):
             session_id += 1
+
+            
         sessions = {
             session_id: {
                 "name": "",
@@ -53,6 +54,12 @@ class Sessions:
                 "options": session_option,
             }
         }
+        config = KittyConfig()
+        sound = config.get_config("FRAMEWORK", "session_sound")
+        if sound:
+            if sound == "True":
+                play_and_stop("data/sound/notify.wav", timeout=0.8)
+
         self.local_storage.update("sessions", sessions)
         return session_id
 

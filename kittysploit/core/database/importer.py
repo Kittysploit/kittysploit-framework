@@ -1,4 +1,4 @@
-from kittysploit.core.base.io import print_info, print_status
+from kittysploit.core.base.io import print_info, print_status, print_success
 from kittysploit.core.database.schema import db, Modules, Cve
 from kittysploit.core.base.storage import LocalStorage
 from kittysploit.core.utils.function_module import (
@@ -98,6 +98,7 @@ def load_modules():
                     platform = ""
                     arch = ""
                     plugin = ""
+                    protocol = ""
                     dev_mode = False
                     if hasattr(load_module, "DEV_MODE"):
                         if load_module.DEV_MODE:
@@ -114,6 +115,8 @@ def load_modules():
                         rank = metadata["rank"]
                     if "plugin" in metadata:
                         plugin = metadata["plugin"]
+                    if "protocol" in metadata:
+                        protocol = metadata["protocol"]
                     type_module = load_module.TYPE_MODULE
                     existing_module = db.query(Modules).filter(Modules.path == relative_module_path[:-3]).first()
                     if existing_module:
@@ -141,10 +144,11 @@ def load_modules():
                             plugin=plugin,
                             platform=platform,
                             arch=arch,
+                            protocol=protocol
                         )
                         db.add(new_module)
                         db.commit()
-                        print_info(f"Module {module_name} added")
+                        print_success(f"{type_module}: {module_name} added")
                 except:
                     continue
     print_status("Done")
@@ -179,6 +183,6 @@ def load_plugins():
                         )
                         db.add(new_plugin)
                         db.commit()
-                        print_info("Plugin %s loaded" % plugin_name)
+                        print_success(f"Plugin {plugin_name} loaded")
                     except:
                         continue

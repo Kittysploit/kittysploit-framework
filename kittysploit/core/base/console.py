@@ -89,6 +89,19 @@ class BaseCompleter:
         else:
             return self.commands.current_module.options
 
+    def complete_load(self, text, *args, **kwargs):
+        scripts = []
+        for root, dirs, files in os.walk("scripts"):
+            _, package, root= root.rpartition("scripts.")
+            root = root.replace(os.sep, ".")
+            
+            files = filter(lambda x: x.endswith(".sc"), files)
+            scripts.extend(map(lambda x: "".join(("", os.path.splitext(x)[0])), files))
+        if text:
+            return [script for script in scripts if script.startswith(text)]
+        else:
+            return scripts
+        
 
 class Console(BaseCompleter):
 

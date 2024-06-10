@@ -317,7 +317,6 @@ class All_commands(Base_command, Show_command):
     pyshell                                    Run python shell          
     doc <lib>                                  Show all methods of lib
     new_module                                 Create new module
-    new_scan                                   Create new module for scaninfo 
     pattern_create <number>                    Create pattern              
     pattern_research <pattern>                 Search pattern offset
     ascii                                      Display ascii table
@@ -459,6 +458,7 @@ class All_commands(Base_command, Show_command):
         load_modules()
         load_plugins()
         init_count_modules()
+        print_status("Database reloaded")
     
     def command_db_clean(self, *args, **kwargs) -> None:
         """
@@ -467,8 +467,20 @@ class All_commands(Base_command, Show_command):
         :return: None
         """
         clean_modules()
+        init_count_modules()
         print_status("Database cleaned")
-        
+    
+    def command_reload(self, *args, **kwargs) -> None:
+        """
+        :param args: arguments of 'reload' command
+        :param kwargs: keyword arguments of 'reload' command
+        :return: None
+        """
+        if self.current_module:
+            self.current_module = check_and_load_module(self.current_module._module_path)()
+            print_success("Module reloaded")
+        else:
+            print_error("No module selected")
 
     @module_required
     def command_cat(self, *args, **kwargs) -> None:
@@ -501,6 +513,23 @@ class All_commands(Base_command, Show_command):
                     self.command_set(f"{key} {value}")
 
     @module_required
+    def command_check(self, *args, **kwargs) -> None:
+        if self.check_options_required():
+            try:
+                print_status("Checking target ...")
+                self.current_module.check()
+            except SyntaxError as e:
+                print_error(e)
+            except AttributeError as e:
+                print_error(e)
+            except NameError as e:
+                print_error(e)
+            except KeyboardInterrupt as e:
+                print_error(e)
+            except ValueError as e:
+                print_error(e)
+
+    @module_required
     def command_run(self, *args, **kwargs) -> None:
         if self.check_options_required():
             try:
@@ -516,6 +545,28 @@ class All_commands(Base_command, Show_command):
                 print_error(e)
             except ValueError as e:
                 print_error(e)
+    
+    @module_required
+    def command_run_background(self, *args, **kwargs) -> None:
+        if self.check_options_required():
+            if self.current_module.TYPE_MODULE == "listener":
+                try:
+                    print_status("Running module in background ...")
+                    self.current_module._exploit_background()
+
+                except SyntaxError as e:
+                    print_error(e)
+                except AttributeError as e:
+                    print_error(e)
+                except NameError as e:
+                    print_error(e)
+                except KeyboardInterrupt as e:
+                    print_error(e)
+                except ValueError as e:
+                    print_error(e)
+            else:
+                print_error("This module must be a listener")
+            
     
     @module_required
     def command_generate(self, *args, **kwargs) -> None:
@@ -606,7 +657,16 @@ class All_commands(Base_command, Show_command):
             else:
                 if isinstance(pargs.port, int):
                     myip = self.check_ip()
-                    self.jobs.create_job("Browser server", f":{pargs.port}", start_browser_server, [pargs.port])
+                    # check que le port n'est pas déjà utilisé
+                    import socket, errno
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    try:
+                        s.bind(("0.0.0.0", int(pargs.port)))
+                    except socket.error as e:
+                        if e.errno == errno.EADDRINUSE:
+                            print_error("Port busy, please select another port")
+                            return
+                    self.jobs.create_job("Browser server", f":{pargs.port}", start_browser_server, [myip, pargs.port])
                     print_info()
                     print_status("Browser server started")
                     print_status(f"Url: http://0.0.0.0:{pargs.port}")
@@ -1053,10 +1113,9 @@ class All_commands(Base_command, Show_command):
                                 )
                             )
 
-                        print_info()
-                        print_info("Active jobs")
+                        console.print("")
+                        console.print("Active jobs")
                         print_table(headers, *jobs_data)
-                        print_info()
                     else:
                         print_error("No active jobs")
 
@@ -1069,21 +1128,15 @@ class All_commands(Base_command, Show_command):
 
     def command_remotescan(self, *args, **kwargs):
         """Execute scan for detect remote vulns"""
-        parser = ModuleArgumentParser(
-            description=self.command_remotescan.__doc__, prog="remotescan"
-        )
-        parser.add_argument(
-            "-t", dest="target", help="run remotescan with target", metavar="<target>"
-        )
+        parser = ModuleArgumentParser(description=self.command_remotescan.__doc__, prog="remotescan")
+        parser.add_argument("-t", dest="target", help="run remotescan with target", metavar="<target>")
         parser.add_argument(
             "-l",
             action="store_true",
             dest="list",
             help="show list of all scan on this workspace",
         )
-        parser.add_argument(
-            "-i", dest="info", help="show result on a target", metavar="<id>"
-        )
+        parser.add_argument("-i", dest="info", help="show result on a target", metavar="<id>")
         parser.add_argument("-d", dest="delete", help="delete result", metavar="<id>")
         parser.add_argument(
             "-n",
@@ -1106,6 +1159,7 @@ class All_commands(Base_command, Show_command):
             else:
                 if pargs is None:
                     return
+                
                 if isinstance(pargs.target, str):
                     threads_number = 16
                     if isinstance(pargs.number, int):
@@ -1121,6 +1175,33 @@ class All_commands(Base_command, Show_command):
                     number = remotescan.get_all_modules()
                     print_success(f"{number} modules found")
                     remotescan.run()
+
+                if pargs.list:
+                    all_remotescan = (
+                        db.query(Remotescan)
+                        .filter(Remotescan.workspace == "default")
+                        .all()
+                    )
+                    if all_remotescan:
+                        all_remotescan = [(r.id, r.target, r.workspace, r.status,) for r in all_remotescan]
+                        print_table(["Id", "Target", "workspace", "Info"], *all_remotescan)
+                    else:
+                        print_error("No scan in this workspace")
+                
+                if isinstance(pargs.info, int):
+                    try:
+                        info = (
+                            db.query(Remotescan_data)
+                            .filter(Remotescan_data.remotescan_id == pargs.info)
+                            .all()
+                        )
+                        if info:
+                            for i in info:
+                                print_info(f"\t{i.module_name} - {i.result}")
+                        else:
+                            print_error("No result")
+                    except:
+                        print_error("Error with database")
 
         except MyParserException as e:
             print_error(e)
@@ -1162,7 +1243,7 @@ class All_commands(Base_command, Show_command):
     def command_load(self, file, *args, **kwargs):
         """Load a .sc file"""
         try:
-            with open(file, "r") as f:
+            with open(f"scripts/{file}.sc", "r") as f:
                 for line in f:
                     try:
                         self.execute_command(line.strip())
@@ -1171,16 +1252,62 @@ class All_commands(Base_command, Show_command):
         except FileNotFoundError as e:
             print_error(e)
     
+    
     def command_tor(self, *args, **kwargs):
-        """Check tor"""
-        import requests
+        """Check tor connection"""
+        parser = ModuleArgumentParser(description=self.command_tor.__doc__, prog="tor")
+        parser.add_argument("-c", "--check", action="store_true", dest="check", help="check tor connection")
+        parser.add_argument("-e", "--enable", action="store_true", dest="enable", help="enable tor connection")
+        parser.add_argument("-d", "--disable", action="store_true", dest="disable", help="disable tor connection")
+        parser.add_argument("-s", "--status", action="store_true", dest="status", help="status of tor in config file")
         try:
-            tor = requests.get("https://check.torproject.org/")
-            if "Congratulations. This browser is configured to use Tor." in tor.text:
-                print_success("Tor is working")
+            pargs = parser.parse_args(shlex.split(args[0]))
+            if args[0] == "":
+                parser.print_help()
             else:
-                print_error("Tor is not working")
-        except requests.exceptions.ConnectionError as e:
+                if pargs.check:
+                    import requests
+                    my_config = KittyConfig()
+                    host = my_config.get_config("TOR", "host")
+                    port = my_config.get_config("TOR", "port")
+                    if not host:
+                        host = "127.0.0.1"
+                    if not port:
+                        port = 9050
+                    
+                    try:
+                        proxies = {
+                            'http': f'socks5h://{host}:{port}',
+                            'https': f'socks5h://{host}:{port}'
+                        }
+                        print_status("Checking tor ...")
+                        tor = requests.get("https://check.torproject.org/", proxies=proxies, timeout=15)
+                        if "Congratulations. This browser is configured to use Tor." in tor.text:
+                            print_success("Tor is working")
+                        else:
+                            print_error("Tor is not working")
+
+                    except requests.exceptions.ConnectionError as e:
+                        print_error("Tor is not working")
+                if pargs.enable:
+                    my_config = KittyConfig()
+                    my_config.modify_config("TOR", "enable", "True")
+                    print_success("Tor enabled")
+                
+                if pargs.disable:
+                    my_config = KittyConfig()
+                    my_config.modify_config("TOR", "enable", "False")
+                    print_success("Tor disabled")
+                
+                if pargs.status:
+                    my_config = KittyConfig()
+                    tor = my_config.get_config("TOR", "enable")
+                    if tor == "True":
+                        print_success("Tor is enabled in config file")
+                    else:
+                        print_error("Tor is disabled in config file")
+                
+        except MyParserException as e:
             print_error(e)
     
     def command_config(self, *args, **kwargs):
@@ -1263,25 +1390,26 @@ class All_commands(Base_command, Show_command):
         else:
             print_error("No history found")
     
+    def command_sound(self, *args, **kwargs):
+        from kittysploit.core.utils.sound import play_sound
+        play_sound("data/sound/sound.wav")
+    
     def command_scan(self, *args, **kwargs):
         # scan port of target
-        parser = ModuleArgumentParser(
-            description=self.command_scan.__doc__, prog="scan"
-        )
-        parser.add_argument(
-            "-t", dest="target", help="scan port of target", metavar="<target>"
-        )
+        parser = ModuleArgumentParser(description=self.command_scan.__doc__, prog="scan")
+        parser.add_argument("-t", dest="target", help="scan port of target", metavar="<target>")
+        parser.add_argument("-p", dest="port", help="port to scan", metavar="<port>", default="20-1024")
         try:
             pargs = parser.parse_args(shlex.split(args[0]))
             if args[0] == "":
                 parser.print_help()
                 return
             if pargs.target:
-                scan = Scanner(target=pargs.target, port="20-10024", workspace="self.workspace")
+                scan = Scanner(pargs.target, pargs.port, workspace="default")
                 print_status("Scanning port ...")
                 port_found = scan.scan()
-                print_table(["Busy port"], *port_found)
-                
+                rows = [(port,) for port in port_found]
+                print_table([f"Port open for {pargs.target}"], *rows)                
                 
         except MyParserException as e:
             print_error(e)
@@ -1341,7 +1469,6 @@ class All_commands(Base_command, Show_command):
             help="name of new module", 
             metavar="<name>",
             type=str,
-            required=True
         )
         parser.add_argument(
             "-t",
@@ -1349,19 +1476,31 @@ class All_commands(Base_command, Show_command):
             help="type of new module",
             metavar="<type_module>",
             type=str,
-            required=True
+        )
+        parser.add_argument(
+            "-s",
+            dest="show",
+            help="show all type of module",
+            action="store_true"
         )
         try:
-            pargs = parser.parse_args(shlex.split(args[0]))
             if args[0] == "":
                 parser.print_help()
+                return
             else:
+                pargs = parser.parse_args(shlex.split(args[0]))
                 if isinstance(pargs.name, str) and isinstance(pargs.type_module, str):
                     new_module = self.create_module(pargs.name, pargs.type_module)
+                else:
+                    print_error("Missing args, must be: new_module -n test -t auxiliary")
+                if pargs.show:
+                    header = ["Type of modules"]
+                    content = [("exploit",),("auxiliary",)]
+                    print_table(header, *content)
                                 
         except MyParserException as e:
             print_error(e)
-    
+        
     def command_myip(self, *args, **kwargs):
         myip = self.check_ip()
         print_status(f"Your IP address: {myip}")

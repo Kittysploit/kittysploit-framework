@@ -4,9 +4,10 @@ from threading import Thread, Lock
 from time import sleep
 
 class Module(Plugin):
-    """Run all modules osint username"""
 
-    __info__ = {"name": "listen", "description": "listen"}
+    __info__ = {"name": "Listener like Netcat", 
+                "description": "Listener like Netcat",
+                }
 
     def __init__(self):
         self.lock = Lock()
@@ -21,6 +22,8 @@ class Module(Plugin):
         try:
             self.s.bind(("0.0.0.0", self.port))
             print_success(f"Listening on :{self.port}")
+            print_success("Write 'exit' to close connection")
+            print_success("Wait client...")
             return True
         except:
             print_error(f"You must be root to bind port {self.port}")
@@ -67,9 +70,7 @@ class Module(Plugin):
     def run(self, *args, **kwargs):
 
         parser = ModuleArgumentParser(description=self.__doc__, prog="listen")
-        parser.add_argument(
-            "-p", dest="port", help="port to listen", type=int, default=6000
-        )
+        parser.add_argument("-p", dest="port", help="port to listen", type=int, default=6000)
         if args[0] == "":
             parser.print_help()
             return
@@ -79,6 +80,7 @@ class Module(Plugin):
                 return
             else:
                 if isinstance(pargs.port, int):
+                    self.port = pargs.port
                     init = self.initialize()
                     if init:
                         listen = Thread(target=self.listen)

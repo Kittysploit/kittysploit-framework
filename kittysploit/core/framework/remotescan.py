@@ -27,6 +27,8 @@ class RemoteScan(object):
             path_lib = pythonize_path(libname)
             func = path_lib.split(".")[-1:][0].capitalize()
             load_lib = __import__(f"core.scanlib.{path_lib}", fromlist=[func])
+            print("------")
+            print(load_lib)
             return getattr(load_lib, func)(self.target, self.port, self.ssl, self.cache)
 
         except ModuleNotFoundError as e:
