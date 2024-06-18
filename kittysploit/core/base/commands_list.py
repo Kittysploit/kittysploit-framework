@@ -24,7 +24,7 @@ GLOBAL_COMMANDS = [
     "asm",
     "disass",
     "archs",
-    "setarch",
+    "archset",
     "syscall",
     "new_module",
     "jobs",

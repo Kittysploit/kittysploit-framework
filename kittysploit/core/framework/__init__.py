@@ -2,15 +2,18 @@ from kittysploit.core.framework.auxiliary import Auxiliary
 from kittysploit.core.framework.exploit import Exploit
 from kittysploit.core.framework.payload import Payload
 from kittysploit.core.framework.dev import Dev
+from kittysploit.core.framework.browserexploit import BrowserExploit
 from kittysploit.core.framework.browserauxiliary import BrowserAuxiliary
 from kittysploit.core.framework.listener import Listener
 from kittysploit.core.framework.plugin import Plugin
+from kittysploit.core.framework.encoder import Encoder
 from kittysploit.core.framework.remotescan import RemoteScan
 from kittysploit.core.framework.rank import Rank
 from kittysploit.core.framework.platform import Platform
 from kittysploit.core.framework.arch import Arch
 from kittysploit.core.framework.procotols import Protocol
 from kittysploit.core.framework.severity import Severity
+from kittysploit.core.framework.browser import Browser
 from kittysploit.core.framework.handler import Handler
 from kittysploit.core.framework.session_type import SessionType
 from kittysploit.core.framework.failure import fail
@@ -33,8 +36,10 @@ __all__ = [
     "Exploit",
     "Payload",
     "Dev",
+    "BrowserExploit",
     "BrowserAuxiliary",
     "Listener",
+    "Encoder",
     "RemoteScan",
     "Plugin",
     "print_error",
@@ -48,6 +53,7 @@ __all__ = [
     "Arch",
     "Protocol",
     "Severity",
+    "Browser",
     "Handler",
     "SessionType",
     "fail",

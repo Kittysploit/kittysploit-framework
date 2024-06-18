@@ -217,9 +217,7 @@ class Localscan_data(Base):
     modules = Column(Text)
     info = Column(Text)
 
-    def __init__(
-        self, localscan_id=0, target="", cvss3="", nom="", cve="", modules="", info=""
-    ):
+    def __init__(self, localscan_id=0, target="", cvss3="", nom="", cve="", modules="", info=""):
         self.localscan_id = localscan_id
         self.target = target
         self.cvss3 = cvss3

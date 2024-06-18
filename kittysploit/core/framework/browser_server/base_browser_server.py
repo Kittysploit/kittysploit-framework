@@ -12,6 +12,6 @@ app = Flask(
 app.config["SECRET_KEY"] = os.urandom(32)
 
 sio = SocketIO()
-sio.init_app(app, async_mode="threading", cors_allowed_origins="*")
+sio.init_app(app, async_mode="threading", cors_allowed_origins="*", ping_timeout=10, ping_interval=5)
 
 CORS(app, resources={r"/*": {"origins": "*"}})

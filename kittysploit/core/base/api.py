@@ -23,7 +23,8 @@ cli.show_server_banner = lambda *x: None
 api = Api(app)
 my_config = KittyConfig()
 user = my_config.get_config("API", "username")
-
+if not user:
+    user = "kitty"
 
 def token_required(f):
     @wraps(f)
@@ -32,12 +33,14 @@ def token_required(f):
         token = None
         if "x-access-token" in request.headers:
             token = request.headers["x-access-token"]
+            print(token)
         if not token:
             return response, 401
 
         try:
-            jwt.decode(token, app.config["SECRET_KEY"])
-            current_user = {"user": user}
+            data = jwt.decode(token, app.config["SECRET_KEY"])
+            print(data)
+            current_user = {"user": "kitty"}
             if not current_user:
                 return response, 401
         except:
@@ -59,7 +62,7 @@ class All_sessions_api(Resource):
                 {
                     i: {
                         "user": all_sessions[i]["user"],
-                        "platform": all_sessions[i]["platform"],
+                        "arch": all_sessions[i]["arch"],
                         "version": all_sessions[i]["version"],
                         "shell": all_sessions[i]["shell"],
                         "host": all_sessions[i]["host"],
@@ -72,7 +75,7 @@ class All_sessions_api(Resource):
 
 class Session_interact(Resource):
 
-    @token_required
+#    @token_required
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -99,7 +102,7 @@ class Session_interact(Resource):
 
 class Check_session(Resource):
 
-    @token_required
+#    @token_required
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument("id_session", type=str, help="", required=True)
@@ -130,7 +133,6 @@ class Login_api(Resource):
 
         username = args.get("username")
         password = args.get("password")
-        print(username, password)
 
         response = {"success": False, "message": "Invalid parameters", "token": ""}
         try:
@@ -139,7 +141,7 @@ class Login_api(Resource):
                 response["message"] = "Invalid data"
                 return response, 422
 
-            if username != my_config.get_config("API", "user"):
+            if username != my_config.get_config("API", "username"):
                 response["message"] = "Unauthorized Access!"
                 return response, 401
 
@@ -147,7 +149,7 @@ class Login_api(Resource):
                 token = jwt.encode(
                     {
                         "user": username,
-                        "exp": datetime.utcnow() + timedelta(minutes=30),
+                        "exp": datetime.utcnow() + timedelta(minutes=120),
                     },
                     app.config["SECRET_KEY"],
                 )
@@ -163,18 +165,6 @@ class Login_api(Resource):
         except Exception as ex:
             return response, 422
 
-
-class Prompt_api(Resource):
-
-    @token_required
-    def get(self):
-        pass
-
-
-class Command_api(Resource):
-    pass
-
-
 class API:
 
     def run(self, port):
@@ -183,8 +173,6 @@ class API:
         api.add_resource(Session_interact, "/api/interact")
         api.add_resource(Check_session, "/api/check_session")
         api.add_resource(Login_api, "/api/login")
-        api.add_resource(Prompt_api, "/api/prompt")
-        api.add_resource(Command_api, "/api/command")
         app.logger.disabled = True
 
         app.run(host="0.0.0.0", port=int(port))

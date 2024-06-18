@@ -1,5 +1,6 @@
 from kittysploit.core.base.storage import LocalStorage
 from kittysploit.core.framework.shell.javascript import Javascript
+from kittysploit.core.framework.shell.shell import Shell
 from kittysploit.core.base.io import print_success, print_info
 from kittysploit.core.utils.sound import play_and_stop
 from kittysploit.core.base.config import KittyConfig
@@ -89,3 +90,9 @@ class Sessions:
             print_info("[+] Session opened")
             javascipt = Javascript(session_id)
             javascipt.interactive()
+
+        if session["shell"] == "shell":
+            print_info()
+            print_info("[+] Session opened")
+            shell = Shell(session_id)
+            shell.interactive()

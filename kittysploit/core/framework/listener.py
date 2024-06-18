@@ -1,6 +1,6 @@
 from kittysploit.core.framework.base_module import BaseModule
 from kittysploit.core.base.storage import LocalStorage
-from kittysploit.core.base.io import print_success, print_status
+from kittysploit.core.base.io import print_success, print_status, print_error
 from kittysploit.core.base.jobs import Jobs
 import threading
 
@@ -68,4 +68,7 @@ class Listener(BaseModule, threading.Thread):
 
     def stop(self):
         print_status("Stopping the listener...")
-        self.stop_flag.set()
+        try:
+            self.stop_flag.set()
+        except Exception as e:
+            print_error(e)

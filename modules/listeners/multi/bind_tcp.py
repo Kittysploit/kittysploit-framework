@@ -5,7 +5,7 @@ class Module(Listener):
     
     __info__ = {
         "name": "bind shell tcp",
-        "handler": Handler.BIND_TCP,
+        "handler": Handler.BIND,
         "module": "listeners/multi/bind_tcp",
         "session_type": SessionType.SHELL,
     }

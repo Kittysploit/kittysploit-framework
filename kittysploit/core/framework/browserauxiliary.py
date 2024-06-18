@@ -4,10 +4,11 @@ from kittysploit.core.framework.browser_server.base_browser_server import sio
 from kittysploit.core.framework.failure import ProcedureError
 from kittysploit.core.base.storage import LocalStorage
 from kittysploit.core.base.io import print_error, print_status
+import time
 
 class BrowserAuxiliary(BaseModule):
 
-    TYPE_MODULE = "browserauxiliary"
+    TYPE_MODULE = "browser_auxiliary"
     
     session = OptInteger(0, "Session to interact with", required=True)
 
@@ -33,9 +34,26 @@ class BrowserAuxiliary(BaseModule):
                 return
             self._handler = _sessions[self.session]["handler"]
             self.run()
+            self._wait_end()
             print_status("Task completed")
         except ProcedureError as e:
             pass
+
+    def _wait_end(self):
+        local_storage = LocalStorage()
+        local_storage.add(f"browser_{self.session}")
+        sio.emit(
+            "issue_task",
+            {"task_id": int(self.session), "input": self.session, "listener": "complete"},
+            room=self._handler,
+            namespace="/remote",
+        )
+        while True:
+            time.sleep(0.5)
+            task_finished = local_storage.get(f"browser_{self.session}")
+            if not task_finished:
+                break
+            
 
     def _execute(self, code):
         """
@@ -56,4 +74,7 @@ class BrowserAuxiliary(BaseModule):
         :return: None
         """
         self._execute(code)
+    
+    def get_result(self, data):
+        return f"sendOutput({self.session}, {data});"
     

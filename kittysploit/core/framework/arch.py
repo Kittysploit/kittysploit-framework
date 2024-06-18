@@ -8,3 +8,4 @@ class Arch:
     GENERIC = {"name": "Generic"}
     ARMLE = {"name": "Armle"}
     ARMBE = {"name": "Armbe"}
+    CMD = {"name: Cmd"}

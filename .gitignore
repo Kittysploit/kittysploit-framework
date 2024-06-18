@@ -2,5 +2,7 @@
 *.ini
 __pycache__/
 *.pyc
-.idea/
+.idea/*
 *.db
+output/*
+todo

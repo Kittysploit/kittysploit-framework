@@ -5,7 +5,7 @@ class Module(Listener):
 
     __info__ = {
         "name": "reverse shell tcp",
-        "handler": Handler.REVERSE_TCP,
+        "handler": Handler.REVERSE,
         "module": "listeners/multi/reverse_tcp",
         "session_type": SessionType.SHELL,
     }

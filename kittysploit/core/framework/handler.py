@@ -1,6 +1,6 @@
 class Handler:
 
-    REVERSE_TCP = {"name": "reverse"}
-    BIND_TCP = {"name": "bind"}
+    REVERSE = {"name": "reverse"}
+    BIND = {"name": "bind"}
     EXECUTE = {"name": "execute"}
     GENERIC = {"name": "generic"}

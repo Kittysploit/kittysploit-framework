@@ -4,6 +4,7 @@ from functools import wraps
 import time
 import os
 import shlex
+from datetime import datetime
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import Terminal256Formatter
@@ -147,6 +148,20 @@ class Show_command:
 
     def _show_info(self, *args, **kwargs) -> None:
         self.command_info()
+    
+    def _show_all(self, *args, **kwargs) -> None:
+        console.print("\nExploits")
+        self._show_exploits()
+        console.print("\nAuxiliary")
+        self._show_auxiliary()
+        console.print("\nPost")
+        self._show_post()
+        console.print("\nPlugins")
+        self._show_plugins()
+        console.print("\nListeners")
+        self._show_listeners()
+        console.print("\nDev")
+        self._show_dev()
 
     def _show_auxiliary(self, *args, **kwargs) -> None:
         auxiliary = (
@@ -165,7 +180,7 @@ class Show_command:
             .filter(Modules.dev_mode == False)
             .all()
         )
-        headers = ["Name", "Rank", "Description"]
+        headers = ["Path", "Rank", "Name"]
         print_table(headers, *exploits)
 
     def _show_post(self, *args, **kwargs) -> None:
@@ -175,16 +190,46 @@ class Show_command:
             .filter(Modules.dev_mode == False)
             .all()
         )
-        headers = ["Name", "Rank", "Description"]
+        headers = ["Path", "Rank", "Name"]
         print_table(headers, *exploits)
+
+    def _show_listeners(self, *args, **kwargs) -> None:
+        listeners = (
+            db.query(Modules.path, Modules.rank, Modules.name)
+            .filter(Modules.type_module == "listener")
+            .filter(Modules.dev_mode == False)
+            .all()
+        )
+        headers = ["Module", "Rank", "Name"]
+        print_table(headers, *listeners)
+
+    def _show_browser_auxiliary(self, *args, **kwargs) -> None:
+        browser_auxiliary = (
+            db.query(Modules.name, Modules.rank, Modules.description)
+            .filter(Modules.type_module == "browser_auxiliary")
+            .filter(Modules.dev_mode == False)
+            .all()
+        )
+        headers = ["Name", "Rank", "Description"]
+        print_table(headers, *browser_auxiliary)
+
+    def _show_browser_exploits(self, *args, **kwargs) -> None:
+        browser_exploits = (
+            db.query(Modules.name, Modules.rank, Modules.description)
+            .filter(Modules.type_module == "browser_exploit")
+            .filter(Modules.dev_mode == False)
+            .all()
+        )
+        headers = ["Name", "Rank", "Description"]
+        print_table(headers, *browser_exploits)
 
     def _show_dev(self, *args, **kwargs) -> None:
         dev = (
-            db.query(Modules.name, Modules.type_module, Modules.rank, Modules.description)
+            db.query(Modules.path, Modules.type_module, Modules.rank, Modules.name)
             .filter(Modules.dev_mode == True)
             .all()
         )
-        headers = ["Name", "Type", "Rank", "Description"]
+        headers = ["Module", "Type", "Rank", "Name"]
         print_table(headers, *dev)
 
     def _show_plugins(self, *args, **kwargs) -> None:
@@ -228,7 +273,7 @@ class Show_command:
         if payload_opts:
             console.print()
             console.print(
-                f"Payload option ({color_red(self.current_module._current_payload._Module__info__['name'])}):"
+                f"Payload option ([red]{self.current_module._current_payload._Module__info__['name']}[/red]):"
             )
             print_table(headers, *self.get_opts(*payload_opts))
 
@@ -287,7 +332,7 @@ class All_commands(Base_command, Show_command):
     """
 
     module_creds = """Creds commands:
-    creds [-h]                                 List all credentials in the database
+    creds                                      List all credentials in the database
     """
 
     module_help = """Module commands:
@@ -346,6 +391,7 @@ class All_commands(Base_command, Show_command):
         self.plugins_help = {}
         self.api = API()
         self.current_arch = "x86"
+        self.current_workspace = "default"
 
     def _prompt_ui(self) -> Text:
         my_prompt = self.my_config.get_config("FRAMEWORK", "prompt")
@@ -650,6 +696,7 @@ class All_commands(Base_command, Show_command):
             metavar="<port number>",
             type=int
         )
+        
         try:
             pargs = parser.parse_args(shlex.split(args[0]))
             if args[0] == "":
@@ -840,6 +887,7 @@ class All_commands(Base_command, Show_command):
                                 print_status(workspace.name)
                     except:
                         print_error("Error in workspace list")
+                        
                 if isinstance(pargs.add, str):
                     try:
                         check = (
@@ -968,7 +1016,7 @@ class All_commands(Base_command, Show_command):
         except MyParserException as e:
             print_error(e)
 
-    def command_api(self, *args, **kwargs):
+    def command_api_session(self, *args, **kwargs):
         """Start api for control session in remote."""
         parser = ModuleArgumentParser(
             description=self.command_api_session.__doc__, prog="api_session"
@@ -989,8 +1037,12 @@ class All_commands(Base_command, Show_command):
                 if pargs is None:
                     return
                 if pargs.port:
-                    user = self.my_config.get_config("API", "user")
+                    user = self.my_config.get_config("API", "username")
+                    if not user:
+                        user = "kitty"
                     password = self.my_config.get_config("API", "password")
+                    if not password:
+                        password = "kitty"
                     self.jobs.create_job(
                         "Rest api", f":{pargs.port}", self.api.run, [pargs.port]
                     )
@@ -1043,6 +1095,42 @@ class All_commands(Base_command, Show_command):
             db.delete(w)
         db.commit()
         print_status("Clean done!")
+    
+    def command_duplicate_workspace(self, *args, **kwargs):
+        new_name = args[0]
+        try:
+            check = (
+                db.query(Workspace)
+                .filter(Workspace.name == new_name)
+                .first()
+            )
+            if check:
+                print_error("Workspace already exist")
+            else:
+                try:
+                    new_workspace = Workspace(new_name)
+                    db.add(new_workspace)
+                    db.commit()
+                    print_success(f"New workspace created: {new_name}")
+                except:
+                    print_error("Error with creation")
+                    return 
+        except:
+            print_error("Error with database")
+            return
+        
+        try:
+            get_data = db.query(Workspace_data).filter(Workspace_data.name == self.current_workspace).all()
+            for i in get_data:
+                new_data = Workspace_data(name=i.name,
+                                    target=i.target,
+                                    ip=i.ip,
+                                    port=i.port)
+                db.session.add(new_data)
+                db.session.commit()
+            print_success("Duplication done!")
+        except:
+            print_error("Error with duplication")
 
     def command_doc(self, lib, *args, **kwargs):
         if lib:
@@ -1600,3 +1688,56 @@ class All_commands(Base_command, Show_command):
         else:
             print_error("Architecture not found")
             print_info("Use 'archs' command to show all architectures")
+    
+    def command_creds(self, *args, **kwargs):
+        
+        get_creds = db.query(Credentials).all()
+        headers = ["Module", "Host", "Username", "Password", "Data"]
+        console.print("Credentials")
+        print_table(headers, *get_creds)
+    
+    def command_output(self, *args, **kwargs):
+        from datetime import datetime
+        if os.path.exists("output"):
+            files = []
+            for file in os.listdir("output"):
+                file_path = os.path.join("output", file)
+                creation_time = os.path.getctime(file_path)
+                formatted_time = datetime.fromtimestamp(creation_time).strftime('%d-%m-%Y %H:%M:%S')
+                file_type = "Folder" if os.path.isdir(file_path) else "File"
+                files.append((file, formatted_time, file_type))
+            print_table(["File", "Time creation", "Type"], *files)
+        else:
+            print_error("No output directory")
+
+
+#    def command_route(self, *args, **kwargs):
+#        routes = db.query(Route).all()
+#        headers = ["Id", "Destination", "Gateway", "Genmask", "Iface"]
+#        if routes:
+#            routes_data = [(r.id, r.destination, r.gateway, r.genmask, r.iface) for r in routes]
+#            print_table(headers, *routes_data)
+#        else:
+#            print_error("No route found")
+        
+#    def command_route_add(self, *args, **kwargs):
+        
+#        parser = ModuleArgumentParser(description=self.command_route_add.__doc__, prog="route_add")
+#        parser.add_argument("-d", dest="destination", help="destination", metavar="<destination>")
+#        parser.add_argument("-g", dest="gateway", help="gateway", metavar="<gateway>")
+#        parser.add_argument("-m", dest="genmask", help="genmask", metavar="<genmask>")
+#        parser.add_argument("-i", dest="iface", help="iface", metavar="<iface>")
+#        try:
+#            pargs = parser.parse_args(shlex.split(args[0]))
+#            if args[0] == "":
+#                parser.print_help()
+#                return
+#            if pargs.destination and pargs.gateway and pargs.genmask and pargs.iface:
+#                new_route = Route(destination=pargs.destination, gateway=pargs.gateway, genmask=pargs.genmask, iface=pargs.iface)
+#                db.add(new_route)
+#                db.commit()
+#                print_success("New route added")
+#            else:
+#                print_error("Missing args")
+#        except MyParserException as e:
+#            print_error(e)

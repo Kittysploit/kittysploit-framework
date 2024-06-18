@@ -197,6 +197,7 @@ class Console(BaseCompleter):
             print_info(kitty_logo)
             print_info(random.choice(citation))
             self.commands.execute_command("banner")
+            
         while True:
 
             try:

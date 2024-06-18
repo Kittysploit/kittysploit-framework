@@ -31,6 +31,7 @@ def check_requirements_file(filename):
                 print(f"[-] Package {package_name} is NOT installed.")
     return missing
 
+print("Check dependency...")
 if check_requirements_file("install/requirements.txt"):
 	print("Missing lib: pip3 install -r install/requirements.txt")
 	raise SystemExit(0)

@@ -33,7 +33,10 @@ class KittyConfig:
         :param param: parameter
         :return: value
         """
-        return self.config[section][param]
+        try:
+            return self.config[section][param]
+        except:
+            return False
 
     def set_config(self, section, param, value) -> None:
         """
