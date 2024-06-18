@@ -23,7 +23,5 @@ jwt
 colorama
 nava
 pretty_errors
-asciinet
-networkx
 Pygments
 rich
