@@ -5,7 +5,7 @@ from time import sleep
 
 class Module(Plugin):
 
-    __info__ = {"name": "Listener like Netcat", 
+    __info__ = {"name": "listen", 
                 "description": "Listener like Netcat",
                 }
 

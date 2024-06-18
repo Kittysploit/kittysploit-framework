@@ -15,7 +15,7 @@ def pythonize_path(path):
     :return str: pythonized path
     """
 
-    return path.replace("/", ".")
+    return path.replace(os.path.sep, ".")
 
 
 def humanize_path(path):

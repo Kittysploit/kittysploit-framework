@@ -1,8 +1,9 @@
+import sys
 try:
     import importlib
-    import pkg_resources
+    import importlib.metadata
 except:
-    print("Install importlib and pkg_resources")
+    print("Install importlib")
 
 PIP_TO_PYTHON_NAME = {
     "pyOpenSSL": "OpenSSL",
@@ -10,6 +11,10 @@ PIP_TO_PYTHON_NAME = {
     "BeautifulSoup4": "bs4",
     "flask-restx": "flask_restx",
 }
+
+if sys.version_info < (3, 10):
+    print("Python 3.10 or higher is required to run this script.")
+    raise SystemExit(0)
 
 def check_requirements_file(filename):
     missing = False
@@ -22,7 +27,7 @@ def check_requirements_file(filename):
                 module = importlib.import_module(python_name)
                 if len(package_info) == 2:
                     required_version = package_info[1]
-                    installed_version = pkg_resources.get_distribution(package_name).version
+                    installed_version = importlib.metadata.distribution(package_name).version
                     if installed_version != required_version:
                         missing = True
                         print(f"[-] Package {package_name} has version {installed_version}, but version {required_version} is required.")
