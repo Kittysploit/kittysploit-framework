@@ -1,6 +1,6 @@
 # Kill In The TtY
 
-[![Kittysploit Logo](https://kittysploit.com/static/img/logo2.jpg)](https://github.com/Kittysploit/kittysploit-framework)
+[![Kittysploit Logo](https://kittysploit.com/static/img/logo_small.jpg)](https://github.com/Kittysploit/kittysploit-framework)
 
 **What is Kittysploit?**
 
