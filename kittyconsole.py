@@ -13,7 +13,7 @@ PIP_TO_PYTHON_NAME = {
 }
 
 if sys.version_info < (3, 10):
-    print("Python 3.10 or higher is required to run this script.")
+    print("Python 3.10 or higher is required to run kittysploit.")
     raise SystemExit(0)
 
 def check_requirements_file(filename):

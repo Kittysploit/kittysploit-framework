@@ -25,3 +25,4 @@ nava
 pretty_errors
 Pygments
 rich
+scapy
