@@ -4,3 +4,4 @@ class SessionType:
     PHP = "php"
     JAVASCRIPT = "javascript"
     CMD = "cmd"
+    SSH = "ssh"

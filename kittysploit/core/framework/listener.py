@@ -32,27 +32,32 @@ class Listener(BaseModule, threading.Thread):
     def _exploit(self):
         from kittysploit.core.base.sessions import Sessions
 
-        module = self.run()
-        if module:
-
+        handler = self.run()
+        if handler:
+            if "lhost" in self.exploit_attributes:
+                session_host = self.exploit_attributes["lhost"][0]
+                session_port = self.exploit_attributes["lport"][1]
+            elif "rhost" in self.exploit_attributes:
+                session_host = self.exploit_attributes["rhost"][0]
+                session_port = self.exploit_attributes["rport"][1]
             self.local_storage.set("session_found", True)
 
             info = self._Module__info__
-            if "handler" in info:
-                handler = info["handler"]
-                session = Sessions()
-                session.add_session(
-                    session_arch="",
-                    session_os="",
-                    session_version="",
-                    session_shell=info["session_type"],
-                    session_host=module[1],
-                    session_port=module[2],
-                    session_handler=module[0],
-                    session_user="",
-                    session_listener=info["module"],
-                    session_option=self.exploit_attributes,
-                )
+#            if "handler" in info:
+#                handler = info["handler"]
+            session = Sessions()
+            session.add_session(
+                session_arch="",
+                session_os="",
+                session_version="",
+                session_shell=info["session_type"],
+                session_host=session_host,
+                session_port=session_port,
+                session_handler=handler,
+                session_user="",
+                session_listener=info["module"],
+                session_option=self.exploit_attributes,
+            )
             if not self.mute:
                 print_success("Session opened")
             return True

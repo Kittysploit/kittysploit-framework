@@ -11,6 +11,23 @@ class Update_framework(object):
     def __init__(self):
         self.local_version = __version__
 
+    def check_update(self):
+        try:
+            data = requests.get(
+                "https://raw.githubusercontent.com/Kittysploit/kittysploit-framework/main/kittysploit/base/version.py"
+            ).content
+            if data:
+                match = re.search(r'__version__ = "(.*?)"', data.decode("utf-8"))
+                if match:
+                    remote_version = match.group(1)
+                    if version.parse(remote_version) > version.parse(self.local_version):
+                        return True
+                    else:
+                        return False
+            return False
+        except:
+            return False   
+
     def update(self):
 
         try:

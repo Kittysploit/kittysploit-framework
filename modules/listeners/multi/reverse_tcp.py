@@ -22,7 +22,7 @@ class Module(Listener):
             self.sock.bind((self.lhost, self.lport))
             self.sock.listen(5)
             client, address = self.sock.accept()
-            return (client, address[0], address[1])
+            return client
         except KeyboardInterrupt:
             return False
         except OSError as e:

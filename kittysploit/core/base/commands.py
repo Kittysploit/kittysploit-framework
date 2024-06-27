@@ -4,6 +4,7 @@ from functools import wraps
 import time
 import os
 import shlex
+import requests
 from datetime import datetime
 from pygments import highlight
 from pygments.lexers import PythonLexer
@@ -401,9 +402,15 @@ class All_commands(Base_command, Show_command):
         return f"[{str(count_sessions)}\] {my_prompt}> "
 
     def _banner(self) -> Text:
+        
+        update = Update_framework()
+        check_is_update = update.check_update()
+        update_banner = ""
+        if check_is_update:
+            update_banner = f"[{color_green('New update available')}]"    
         banner = f"""
 
-       =[ KittySploit v{__version__}
+       =[ KittySploit v{__version__} {update_banner}
 + -- --=[ {self.local_storage.get('exploits')} exploits - {self.local_storage.get('auxiliary')} auxiliary - {self.local_storage.get('post')} post
 + -- --=[ {self.local_storage.get('browser_exploits')} browser_exploits - {self.local_storage.get('browser_auxiliary')} browser_auxiliary
 + -- --=[ {self.local_storage.get('payloads')} payloads - {self.local_storage.get('encoders')} encoders - {self.local_storage.get('plugins')} plugins
@@ -1710,6 +1717,22 @@ class All_commands(Base_command, Show_command):
         else:
             print_error("No output directory")
 
+    @module_required
+    def command_payloads(self, *args, **kwargs):
+        list_payload = []
+        arch = None
+        platform = None
+        category = None
+        info = module_metadata(self.current_module)
+        if "arch" in info:
+            arch = info['arch']['name']
+        if "plarform" in info:
+            platform = info['platform']['name']
+        if "category" in info['payload']:
+            category = info['payload']['payload_cateogry']
+        
+        db.query(Modules).filter(Modules.type_module=="payload").filter()
+#            print()
 
 #    def command_route(self, *args, **kwargs):
 #        routes = db.query(Route).all()

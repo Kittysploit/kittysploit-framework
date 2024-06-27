@@ -1,6 +1,7 @@
 from kittysploit.core.base.storage import LocalStorage
 from kittysploit.core.framework.shell.javascript import Javascript
 from kittysploit.core.framework.shell.shell import Shell
+from kittysploit.core.framework.shell.ssh import Ssh
 from kittysploit.core.base.io import print_success, print_info
 from kittysploit.core.utils.sound import play_and_stop
 from kittysploit.core.base.config import KittyConfig
@@ -80,6 +81,11 @@ class Sessions:
             javascript = Javascript(session_id)
             output = javascript.execute(command, raw=raw)
             return output
+        
+        if session["shell"] == "shell":
+            shell = Shell(session_id)
+            output = shell.execute(command, raw=raw)
+            return output
 
     def interactive(self, session_id):
         sessions = self.local_storage.get("sessions")
@@ -96,3 +102,9 @@ class Sessions:
             print_info("[+] Session opened")
             shell = Shell(session_id)
             shell.interactive()
+        
+        if session["shell"] == "ssh":
+            print_info()
+            print_info("[+] Session opened")
+            ssh = Ssh(session_id)
+            ssh.interactive()
