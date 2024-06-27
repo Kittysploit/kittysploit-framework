@@ -1,5 +1,5 @@
 from kittysploit.core.framework.shell.base_shell import Base_shell
-from kittysploit.core.base.io import print_info, print_error, color_green
+from kittysploit.core.base.io import print_info, print_error
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.shortcuts import prompt, CompleteStyle

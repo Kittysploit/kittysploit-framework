@@ -20,9 +20,9 @@ class Module(Listener):
 
 	def run(self):
 		try:
-			self.sock = SSHClient()
-			self.sock.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-			self.sock.connect(self.rhost, self.rport, self.username, self.password, look_for_keys=False, allow_agent=False)
-			return True
+			ssh_channel = SSHClient()
+			ssh_channel.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			ssh_channel.connect(self.rhost, self.rport, self.username, self.password, look_for_keys=False, allow_agent=False)
+			return self.sock
 		except:
 			return False
