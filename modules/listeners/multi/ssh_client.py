@@ -12,10 +12,10 @@ class Module(Listener):
         "session_type": SessionType.SSH
 	}
 	
-	rhost = OptString("iocrm.be", "Target IPv4 or IPv6 address")
-	rport = OptPort(54321, "Target HTTP port", "yes")
+	rhost = OptString("127.0.0.1", "Target IPv4 or IPv6 address")
+	rport = OptPort(22, "Target HTTP port", "yes")
 	username = OptString("ubuntu", "username", "yes")
-	password = OptString("app-systeme-ch13", "password", "yes")
+	password = OptString("ubuntu", "password", "yes")
 
 
 	def run(self):

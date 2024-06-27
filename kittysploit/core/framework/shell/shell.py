@@ -6,7 +6,6 @@ from prompt_toolkit.shortcuts import prompt, CompleteStyle
 from prompt_toolkit.patch_stdout import patch_stdout
 import time
 import socket
-import paramiko
 from colorama import Fore, Style
 from prompt_toolkit.formatted_text import ANSI
 
