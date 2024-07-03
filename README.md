@@ -4,7 +4,7 @@
 
 **What is Kittysploit?**
 
-A framework for building exploit and vulnerability detection tools using Python, inspired by Metasploit.
+A framework for building exploit and vulnerability detection tools using Python.
 
 **Requirements**
 

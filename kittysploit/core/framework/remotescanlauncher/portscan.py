@@ -1,7 +1,6 @@
 from kittysploit.core.utils.locked_iterator import LockedIterator
 from kittysploit.core.base.io import print_error
 from kittysploit.core.framework.remotescanlauncher.port_list import PORT
-import concurrent.futures
 import threading
 import ipaddress
 from urllib.parse import urlparse
@@ -10,7 +9,7 @@ import re
 
 class Scanner:
 
-    def __init__(self, target, port=None, workspace=None):
+    def __init__(self, target, workspace=None):
 
         self.target = target
         self.port = [21, 80, 443, 665, 8008]

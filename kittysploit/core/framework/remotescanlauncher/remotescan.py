@@ -5,10 +5,10 @@ from kittysploit.core.database.schema import *
 from kittysploit.core.framework.remotescanlauncher.port_list import PORT, PORT_SSL
 from kittysploit.core.framework.remotescanlauncher.portscan import Scanner
 from kittysploit.core.utils.locked_iterator import LockedIterator
+from kittysploit.core.framework.remotescanlauncher.cache.cache_http import Cache_http
 import threading
 import time
 from itertools import chain
-import requests
 
 
 class RemoteScan:
@@ -29,7 +29,7 @@ class RemoteScan:
         self.scan_id = None
         self.threads_number = threads_number
         self.port = []
-        self.cache = None
+        self.cache = {}
         self.protocols = []
         self.port_temporaire = {}
         self.port_scanned = []
@@ -41,12 +41,13 @@ class RemoteScan:
         Scan target
         :return: list of open ports
         """
-        
-        if self.target.startswith("http"):
+
+        if self.target.startswith("https"):
+            self.target = self.target.split("//")[1]        
+        elif self.target.startswith("http"):
             self.target = self.target.split("//")[1]
-        elif self.target.startswith("https"):
-            self.target = self.target.split("//")[1]
-        scan = Scanner(target=self.target, port="20-10000", workspace=self.workspace)
+
+        scan = Scanner(target=self.target, workspace=self.workspace)
         self.port_scanned = scan.scan()
         for port in self.port_scanned:
             check = (
@@ -65,21 +66,6 @@ class RemoteScan:
                 )
                 db.add(add_info)
                 db.commit()
-
-        #        my_target_port = db.query(Workspace_data.port).filter(Workspace_data.name==self.workspace, Workspace_data.ip==self.target, Workspace_data.target==False).all()
-        for port in self.port_scanned:
-            try:
-                if int(port) in PORT:    
-                    proto = PORT[int(port)]
-                    self.protocols.append(proto)
-                    if proto == "http" or proto == "https":
-                        self.cache = requests.get(url=f"{proto}://{self.target}")
-                    self.port_temporaire[port] = proto
-                else:
-                    self.port_temporaire[port] = port
-            except:
-                continue
-        print(self.port_temporaire)
         
         return self.port_scanned
 
@@ -98,6 +84,10 @@ class RemoteScan:
         for port in self.port_scanned:
             if port in PORT:
                 unique_protocols.append((PORT[port], port))  # Inclure le port
+                if PORT[port] not in self.cache:
+                    if PORT[port] == "http":
+                        add_cache = Cache_http(self.target, port)
+                        self.cache[PORT[port]] = add_cache.put_cache()
 
         # Un dictionnaire pour associer les protocoles à leurs ports
         protocol_to_ports = {}
@@ -132,6 +122,7 @@ class RemoteScan:
                     result_with_ports.append((item[0], item[1], port))
         
         self.all_modules = result_with_ports
+        print(self.cache)
 
         return len(self.all_modules)
 
@@ -179,7 +170,6 @@ class RemoteScan:
     def load_module(self, running, data):
         while running.is_set():
             new_module = data.__next__()
-            print(new_module)
             if new_module is None:
                 break
             else:
@@ -195,18 +185,21 @@ class RemoteScan:
                 
                 module_path = pythonize_path(module_path)
                 module_path = ".".join(("modules", module_path))
+                print(self.cache)
                 current_module_scan = import_module(module_path)(self.target, port, self.cache)
                 try:
-                    r = current_module_scan.run()
-                    if r:
+                    result = current_module_scan.run()
+                    if result:
                         info_return = ""
-                        if isinstance(r, str):
-                            info_return = r
+                        if isinstance(result, str):
+                            info_return = result
                         info = current_module_scan.__info__
                         module_cvss3 = ""
                         module_name = ""
                         module_cve = ""
                         module_module = ""
+                        if "name" not in info:
+                            break
                         if "cvss3" in info:
                             module_cvss3 = info["cvss3"]
                         if "name" in info:
