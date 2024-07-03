@@ -41,8 +41,10 @@ if check_requirements_file("install/requirements.txt"):
 	print("Missing lib: pip3 install -r install/requirements.txt")
 	raise SystemExit(0)
 
-from kittysploit.runtime import main_console
 import pretty_errors
+import warnings
+warnings.filterwarnings("ignore")
+from kittysploit.runtime import main_console
 
 if __name__ == "__main__":
     main_console()

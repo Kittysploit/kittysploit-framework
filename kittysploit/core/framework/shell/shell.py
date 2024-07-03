@@ -23,7 +23,10 @@ class Shell(Base_shell):
         print_info("Commands: " + ", ".join(help_commands))
         completer = WordCompleter(help_commands, ignore_case=True)
         history = InMemoryHistory()
-        self.handler.settimeout(0.6)
+        try:
+            self.handler.settimeout(0.6)
+        except:
+            pass
         current_dir = ""
         while True:
             with patch_stdout():

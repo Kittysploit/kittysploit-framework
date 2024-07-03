@@ -1,6 +1,6 @@
 import configparser
 from typing import Text
-from kittysploit.core.base.io import print_error, print_info
+from kittysploit.core.base.io import print_error
 from kittysploit.base.kitty_path import base_path
 import os
 from rich.console import Console

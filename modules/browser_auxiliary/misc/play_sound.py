@@ -5,9 +5,8 @@ class Module(BrowserAuxiliary):
 	__info__ = {
 		"name": "play sound",
 		"description": "play sound",
-		"target": (
-			"all",
-		),
+		"browser": Browser.ALL,
+		"platform": Platform.ALL
 	}	
 	
 	url_audio = OptString("", "Url audio file", "yes")

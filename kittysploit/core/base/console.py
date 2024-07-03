@@ -227,6 +227,8 @@ class Console(BaseCompleter):
                         print_error(e)
                 command_handler = self.commands.get_command_handler(command)
                 command_handler(args, **kwargs)
+                if command == "db_clean" or command == "db_reload":
+                    self.modules = index_modules()
                 sleep(0.3)
             except KittyException as e:
                 print_error(e)

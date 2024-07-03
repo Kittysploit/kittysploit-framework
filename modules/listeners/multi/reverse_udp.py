@@ -27,3 +27,11 @@ class Module(Listener):
 		except OSError:
 			print_error("Port busy")
 			return False
+
+	def shutdown(self):
+		try:
+			if self.sock:
+				self.sock.shutdown(socket.SHUT_RDWR)
+				self.sock.close()
+		except OSError as e:
+			pass

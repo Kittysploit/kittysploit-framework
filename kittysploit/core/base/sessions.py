@@ -2,7 +2,7 @@ from kittysploit.core.base.storage import LocalStorage
 from kittysploit.core.framework.shell.javascript import Javascript
 from kittysploit.core.framework.shell.shell import Shell
 from kittysploit.core.framework.shell.ssh import Ssh
-from kittysploit.core.base.io import print_success, print_info
+from kittysploit.core.base.io import print_info, print_status
 from kittysploit.core.utils.sound import play_and_stop
 from kittysploit.core.base.config import KittyConfig
 
@@ -71,6 +71,14 @@ class Sessions:
             if sessions[i]["handler"] == sid:
                 del sessions[i]
                 break
+    
+    def delete_shell_session(self, session_id):
+        sessions = self.local_storage.get("sessions")
+        try:
+            del sessions[session_id]
+            return True
+        except:
+            return False
 
     def execute(self, session_id, command, raw=False):
         """Execute a command on a session"""
@@ -108,3 +116,13 @@ class Sessions:
             print_info("[+] Session opened")
             ssh = Ssh(session_id)
             ssh.interactive()
+    
+    def upgrade(self, session_id):
+        sessions = self.local_storage.get("sessions")
+        session = sessions[int(session_id)]
+        
+        if session["shell"] == "shell":
+            shell = Shell(session_id)
+            shell.upgrade()
+        else:
+            print_status("Impossible to upgrade this session")

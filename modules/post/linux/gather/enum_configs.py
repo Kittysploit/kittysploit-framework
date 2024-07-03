@@ -5,7 +5,7 @@ class Module(Post, System):
 	__info__ = {
 		"name": "Linux Gather Configurations",
 		"description": "Linux Gather Configurations",
-		"type": "shell",
+		"session_type": SessionType.SHELL
 	}	
 		
 	def run(self):
@@ -24,19 +24,14 @@ class Module(Post, System):
 		]
 
 		distro = self.get_sysinfo()['distro']
-		print_status(distro)
 		print_status(f"Finding configuration files...")
-		for c in configs:
-			output = self.read_file(c).strip()
+		for config in configs:
+			output = self.read_file(config).strip()
 			if len(output) == 0:
 				continue
 			elif "No such file or directory" in output:
 				continue
-			elif f"cat: {c}:" in output:
+			elif f"cat: {config}:" in output:
 				continue
 			else:
-				print_status(c)
-#		print_info(self.read_file('/tmp/a.txt'))
-#		print_info(self.get_sysinfo()['distro'])
-#		res = self.cmd_exec(self.command) 
-#		print_info(res)
+				print_status(config)

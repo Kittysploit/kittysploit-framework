@@ -1,5 +1,7 @@
 from kittysploit.core.utils.locked_iterator import LockedIterator
 from kittysploit.core.base.io import print_error
+from kittysploit.core.framework.remotescanlauncher.port_list import PORT
+import concurrent.futures
 import threading
 import ipaddress
 from urllib.parse import urlparse
@@ -11,7 +13,7 @@ class Scanner:
     def __init__(self, target, port=None, workspace=None):
 
         self.target = target
-        self.port = self.read_port(port)
+        self.port = [21, 80, 443, 665, 8008]
         self.workspace = workspace
         self.port_open = []
 
@@ -60,10 +62,11 @@ class Scanner:
                 break
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.settimeout(3)
+                    sock.settimeout(1)
                     status = sock.connect_ex((host, int(port)))
                     if status == 0:
                         self.port_open.append(port)
+                    sock.close()
             except Exception as e:
                 print_error(f"Error while scanning port {port}: {e}")
 

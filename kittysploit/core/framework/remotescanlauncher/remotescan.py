@@ -1,6 +1,3 @@
-import threading
-import time
-from itertools import chain
 from kittysploit.core.utils.function_module import pythonize_path, import_module
 from kittysploit.core.base.jobs import Jobs
 from kittysploit.core.base.storage import LocalStorage
@@ -8,6 +5,9 @@ from kittysploit.core.database.schema import *
 from kittysploit.core.framework.remotescanlauncher.port_list import PORT, PORT_SSL
 from kittysploit.core.framework.remotescanlauncher.portscan import Scanner
 from kittysploit.core.utils.locked_iterator import LockedIterator
+import threading
+import time
+from itertools import chain
 import requests
 
 
@@ -46,7 +46,7 @@ class RemoteScan:
             self.target = self.target.split("//")[1]
         elif self.target.startswith("https"):
             self.target = self.target.split("//")[1]
-        scan = Scanner(target=self.target, port="20-1024", workspace=self.workspace)
+        scan = Scanner(target=self.target, port="20-10000", workspace=self.workspace)
         self.port_scanned = scan.scan()
         for port in self.port_scanned:
             check = (
@@ -69,12 +69,10 @@ class RemoteScan:
         #        my_target_port = db.query(Workspace_data.port).filter(Workspace_data.name==self.workspace, Workspace_data.ip==self.target, Workspace_data.target==False).all()
         for port in self.port_scanned:
             try:
-                if int(port) in PORT:
-                    
+                if int(port) in PORT:    
                     proto = PORT[int(port)]
                     self.protocols.append(proto)
                     if proto == "http" or proto == "https":
-                        
                         self.cache = requests.get(url=f"{proto}://{self.target}")
                     self.port_temporaire[port] = proto
                 else:
@@ -82,6 +80,7 @@ class RemoteScan:
             except:
                 continue
         print(self.port_temporaire)
+        
         return self.port_scanned
 
     def personnalize(self) -> None:
@@ -92,28 +91,51 @@ class RemoteScan:
             proto = self.port_temporaire[port]
             self.protocols.append(proto)
 
+    
     def get_all_modules(self):
-        """
-        Get all modules
-        :return: number of modules
-        """
-        unique_protocols = set(self.port_temporaire.values())
-        modules_query = (db.query(Modules.path, Modules.protocol).filter(Modules.type_module == "remotescan").
-                         filter(Modules.protocol.in_(unique_protocols)).all())
-        print(modules_query)
+        # Créer une liste de tuples (protocole, port)
+        unique_protocols = []
+        for port in self.port_scanned:
+            if port in PORT:
+                unique_protocols.append((PORT[port], port))  # Inclure le port
 
+        # Un dictionnaire pour associer les protocoles à leurs ports
+        protocol_to_ports = {}
+        for protocol, port in unique_protocols:
+            if protocol in PORT_SSL:
+                ssl_protocol = PORT_SSL[protocol]
+                ssl_ports = [p for p, pt in PORT.items() if pt == ssl_protocol]
+                if ssl_ports:
+                    protocol_to_ports.setdefault(ssl_protocol, set()).add(ssl_ports[0])
+                protocol_to_ports.setdefault(protocol, set()).add(port)
+            else:
+                protocol_to_ports.setdefault(protocol, set()).add(port)
 
-        #        for p in self.protocols:
-        #            if p in PORT_SSL:
-        #                p = PORT_SSL[p]
-        #                self.protocols_ssl.append(p)
-        #        for value in modules_query:
-        #            if value[0].split('/')[1] in self.protocols:
-        #                self.all_modules.append(value[0].split('/')[1]+"@@"+value[0])
-        #            if value[0].split('/')[1] in self.protocols_ssl:
-        #                self.all_modules.append(value[0].split('/')[1]+"s@@"+value[0])
-        self.all_modules = [item for item in modules_query]
+        # Liste pour contenir tous les résultats avec ports
+        result_with_ports = []
+
+        # Obtenir les modules pour chaque protocole avec tous les ports associés
+        for protocol, ports in protocol_to_ports.items():
+            # Ajouter les équivalents SSL si disponibles
+            equivalent_protocols = [protocol]
+            if protocol in PORT_SSL:
+                equivalent_protocols.append(PORT_SSL[protocol])
+            
+            # Requêter tous les modules pour les protocoles équivalents
+            modules_query = (db.query(Modules.path, Modules.protocol)
+                            .filter(Modules.type_module == "remotescan")
+                            .filter(Modules.protocol.in_(equivalent_protocols))
+                            .all())
+            
+            for item in modules_query:
+                for port in ports:
+                    result_with_ports.append((item[0], item[1], port))
+        
+        self.all_modules = result_with_ports
+
         return len(self.all_modules)
+
+
 
     def run_threads(self, threads_number, target_function, *args, **kwargs):
         """
@@ -157,6 +179,7 @@ class RemoteScan:
     def load_module(self, running, data):
         while running.is_set():
             new_module = data.__next__()
+            print(new_module)
             if new_module is None:
                 break
             else:
@@ -168,19 +191,14 @@ class RemoteScan:
                 #                        port = i
                 #               
                 # break
-                module_path, protocol = new_module
+                module_path, protocol, port = new_module
                 
                 module_path = pythonize_path(module_path)
                 module_path = ".".join(("modules", module_path))
-#                port = PORT[protocol]
-                #                if proto_of_module in PORT_SSL:
-                #                    current_module_scan = import_module(module_path)(self.target, port, self.cache, True)
-                #                else:
-                current_module_scan = import_module(module_path)(self.target, 80, self.cache)
+                current_module_scan = import_module(module_path)(self.target, port, self.cache)
                 try:
                     r = current_module_scan.run()
                     if r:
-                        print(r)
                         info_return = ""
                         if isinstance(r, str):
                             info_return = r
@@ -189,7 +207,6 @@ class RemoteScan:
                         module_name = ""
                         module_cve = ""
                         module_module = ""
-                        module_protocol = ""
                         if "cvss3" in info:
                             module_cvss3 = info["cvss3"]
                         if "name" in info:
@@ -203,11 +220,12 @@ class RemoteScan:
                         add_info = Remotescan_data(
                             remotescan_id=self.scan_id,
                             target=self.target,
-                            port=80,
+                            port=port,
                             cvss3=module_cvss3,
                             name=module_name,
                             cve=module_cve,
                             modules=module_module,
+                            protocol=protocol,
                             info=info_return,
                         )
                         db.add(add_info)
@@ -215,7 +233,7 @@ class RemoteScan:
                 except:
                     continue
             self.compteur += 1
-        db.commit()
+            db.commit()
 
     def run(self):
         add_scan = Remotescan(
@@ -227,6 +245,5 @@ class RemoteScan:
         self.job_id = self.jobs.create_job("Remote scan", self.target, self.attack)
 
     def attack(self):
-        self.total = len(self.all_modules)
         data = LockedIterator(self.all_modules)
         self.run_threads(self.threads_number, self.load_module, data)

@@ -19,9 +19,7 @@ from kittysploit.core.base.io import (
     print_table,
     input_info,
     print_dict,
-    color_red,
     color_green,
-    confirm,
 )
 from kittysploit.core.base.exceptions import KittyException
 from kittysploit.core.base.storage import LocalStorage
@@ -157,10 +155,24 @@ class Show_command:
         self._show_auxiliary()
         console.print("\nPost")
         self._show_post()
+        console.print("\nBrowser exploits")
+        self._show_browser_exploits()
+        console.print("\nBrowser auxiliary")
+        self._show_browser_auxiliary()
+        console.print("\nPayloads")
+        self._show_payloads()
+        console.print("\nEncoders")
+        self._show_encoders()
         console.print("\nPlugins")
         self._show_plugins()
         console.print("\nListeners")
         self._show_listeners()
+        console.print("\nBackdoors")
+        self._show_backdoors()
+        console.print("\nRemotescan")
+        self._show_remotescan()
+        console.print("\nLocalscan")
+        self._show_localscan()
         console.print("\nDev")
         self._show_dev()
 
@@ -194,6 +206,26 @@ class Show_command:
         headers = ["Path", "Rank", "Name"]
         print_table(headers, *exploits)
 
+    def _show_payloads(self, *args, **kwargs) -> None:
+        payloads = (
+            db.query(Modules.name, Modules.rank, Modules.description)
+            .filter(Modules.type_module == "payload")
+            .filter(Modules.dev_mode == False)
+            .all()
+        )
+        headers = ["Path", "Rank", "Name"]
+        print_table(headers, *payloads)
+
+    def _show_encoders(self, *args, **kwargs) -> None:
+        encoders = (
+            db.query(Modules.name, Modules.rank, Modules.description)
+            .filter(Modules.type_module == "encoder")
+            .filter(Modules.dev_mode == False)
+            .all()
+        )
+        headers = ["Path", "Rank", "Name"]
+        print_table(headers, *encoders)
+
     def _show_listeners(self, *args, **kwargs) -> None:
         listeners = (
             db.query(Modules.path, Modules.rank, Modules.name)
@@ -203,6 +235,36 @@ class Show_command:
         )
         headers = ["Module", "Rank", "Name"]
         print_table(headers, *listeners)
+
+    def _show_backdoors(self, *args, **kwargs) -> None:
+        backdoors = (
+            db.query(Modules.path, Modules.rank, Modules.name)
+            .filter(Modules.type_module == "backdoor")
+            .filter(Modules.dev_mode == False)
+            .all()
+        )
+        headers = ["Module", "Rank", "Name"]
+        print_table(headers, *backdoors)
+
+    def _show_remotescan(self, *args, **kwargs) -> None:
+        remotescan = (
+            db.query(Modules.path, Modules.rank, Modules.name)
+            .filter(Modules.type_module == "remotescan")
+            .filter(Modules.dev_mode == False)
+            .all()
+        )
+        headers = ["Module", "Rank", "Name"]
+        print_table(headers, *remotescan)
+
+    def _show_localscan(self, *args, **kwargs) -> None:
+        localscan = (
+            db.query(Modules.path, Modules.rank, Modules.name)
+            .filter(Modules.type_module == "localscan")
+            .filter(Modules.dev_mode == False)
+            .all()
+        )
+        headers = ["Module", "Rank", "Name"]
+        print_table(headers, *localscan)
 
     def _show_browser_auxiliary(self, *args, **kwargs) -> None:
         browser_auxiliary = (
@@ -808,8 +870,8 @@ class All_commands(Base_command, Show_command):
                 if isinstance(pargs.execute, list):
                     all_sessions = self.sessions.get_sessions()
                     if int(pargs.execute[0]) in all_sessions:
-                        r = self.sessions.execute(pargs.execute[0], pargs.execute[1])
-                        print_info(r)
+                        result = self.sessions.execute(pargs.execute[0], pargs.execute[1])
+                        print_info(result)
                     else:
                         print_error("Session doesn't exist")
 
@@ -855,7 +917,46 @@ class All_commands(Base_command, Show_command):
                         print_table(headers, *sessions_data)
                     else:
                         print_info("No active sessions")
+                        
+                if isinstance(pargs.rename, list):
+                    session_id, new_name = pargs.rename.split(" ")
+                    all_sessions = self.sessions.get_sessions()
+                    if int(session_id) in all_sessions:
+                        all_sessions[session_id]['name'] = new_name
+                    else:
+                        print_error("Session id doesn't exist")
 
+                if isinstance(pargs.kill, int):
+                    session_id = pargs.kill
+                    all_sessions = self.sessions.get_sessions()
+                    if int(session_id) in all_sessions:
+                        session_type = all_sessions[session_id]['shell']
+                        if session_type == "shell":
+                            result = self.sessions.delete_shell_session()
+                            if result:
+                                try:
+                                    all_sessions[session_id]['handler'].close()
+                                except:
+                                    pass
+                                print_success("Session killed")
+                            else:
+                                print_error("Error for kill session")
+                    else:
+                        print_error("Session id doesn't exist")
+                    
+                if isinstance(pargs.upgrade, int):
+                    all_sessions = self.sessions.get_sessions()
+                    if pargs.upgrade in all_sessions:
+                        self.sessions.upgrade(pargs.upgrade)
+                
+                if isinstance(pargs.bot, int):
+                    all_sessions = self.sessions.get_sessions()
+                    session_id = pargs.bot
+                    if int(session_id) in all_sessions:
+                        session_type = all_sessions[session_id]['shell']
+                        if session_type != 'javascript':
+                            pass
+                
         except MyParserException as e:
             print_error(e)
 
@@ -1151,9 +1252,9 @@ class All_commands(Base_command, Show_command):
                 return
             all_class_base_module = getattr(base_module, "BaseModule")
             function_basemodule = []
-            for i in dir(all_class_base_module):
-                if not i.startswith("__") or not i.startswith("_"):
-                    function_basemodule.append(i)
+            for function_found in dir(all_class_base_module):
+                if not function_found.startswith("__") or not function_found.startswith("_"):
+                    function_basemodule.append(function_found)
             try:
                 lib_called = __import__(lib, fromlist=[classname])
             except IndentationError as e:
@@ -1225,27 +1326,12 @@ class All_commands(Base_command, Show_command):
         """Execute scan for detect remote vulns"""
         parser = ModuleArgumentParser(description=self.command_remotescan.__doc__, prog="remotescan")
         parser.add_argument("-t", dest="target", help="run remotescan with target", metavar="<target>")
-        parser.add_argument(
-            "-l",
-            action="store_true",
-            dest="list",
-            help="show list of all scan on this workspace",
-        )
-        parser.add_argument("-i", dest="info", help="show result on a target", metavar="<id>")
+        parser.add_argument("-l", action="store_true", dest="list", help="show list of all scan on this workspace",)
+        parser.add_argument("-i", dest="info", help="show result on a target", metavar="<id>", type=int)
         parser.add_argument("-d", dest="delete", help="delete result", metavar="<id>")
-        parser.add_argument(
-            "-n",
-            dest="number",
-            help="number of threads, default: 16",
-            metavar="<number>",
-            type=int,
-        )
-        parser.add_argument(
-            "-p",
-            dest="protocol",
-            help="don't scan port and run module in selected port with protocol e.g: -p 2222:ssh,443:https",
-            metavar="<port:protocol>",
-        )
+        parser.add_argument("-n", dest="number", help="number of threads, default: 32", metavar="<number>", type=int)
+        parser.add_argument("-p", dest="protocol", help="don't scan port and run module in selected port with protocol e.g: -p 2222:ssh,443:https,8888:https", metavar="<port:protocol>")
+        parser.add_argument("-r", dest="report", help="create a pdf report", metavar="<id>")
         try:
             pargs = parser.parse_args(shlex.split(args[0]))
             if args[0] == "":
@@ -1256,7 +1342,7 @@ class All_commands(Base_command, Show_command):
                     return
                 
                 if isinstance(pargs.target, str):
-                    threads_number = 16
+                    threads_number = 32
                     if isinstance(pargs.number, int):
                         threads_number = pargs.number
                     print_success("Remote Scan start...")
@@ -1285,14 +1371,15 @@ class All_commands(Base_command, Show_command):
                 
                 if isinstance(pargs.info, int):
                     try:
-                        info = (
-                            db.query(Remotescan_data)
+                        data = (
+                            db.query(Remotescan_data.port, Remotescan_data.name, Remotescan_data.cve, Remotescan_data.info, Remotescan_data.modules)
                             .filter(Remotescan_data.remotescan_id == pargs.info)
                             .all()
                         )
-                        if info:
-                            for i in info:
-                                print_info(f"\t{i.module_name} - {i.result}")
+                        if data:
+                            headers= ['Port', 'Name', 'Cve', 'Info', 'Module']
+                            print_table(headers, *data)
+
                         else:
                             print_error("No result")
                     except:

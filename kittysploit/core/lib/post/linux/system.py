@@ -1,6 +1,9 @@
 from kittysploit.core.lib.post.file import File
 
 class System(File):
+
+	def __init__(self):
+		super(File, self).__init__()
 	
 	def get_sysinfo(self):
 		""" Get system information"""

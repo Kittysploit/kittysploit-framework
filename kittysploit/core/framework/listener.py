@@ -34,11 +34,15 @@ class Listener(BaseModule, threading.Thread):
 
         handler = self.run()
         if handler:
+            session_host = None
+            session_port = None
             if "lhost" in self.exploit_attributes:
                 session_host = self.exploit_attributes["lhost"][0]
+            if "lport" in self.exploit_attributes:
                 session_port = self.exploit_attributes["lport"][1]
-            elif "rhost" in self.exploit_attributes:
+            if "rhost" in self.exploit_attributes:
                 session_host = self.exploit_attributes["rhost"][0]
+            if "rport" in self.exploit_attributes:
                 session_port = self.exploit_attributes["rport"][1]
             self.local_storage.set("session_found", True)
 

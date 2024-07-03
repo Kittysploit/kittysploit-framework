@@ -1,9 +1,9 @@
 from kittysploit.core.framework.browser_server.base_browser_server import app, sio
-from kittysploit.core.base.io import print_error, print_info, print_status
+from kittysploit.core.base.io import print_error, print_info
 from kittysploit.core.base.sessions import Sessions
 from kittysploit.core.framework.session_type import SessionType
 from kittysploit.core.base.storage import LocalStorage
-from flask import Response, render_template, make_response, request, send_from_directory
+from flask import render_template, make_response, request, send_from_directory
 import json
 
 @sio.on("connect", namespace="/remote")
